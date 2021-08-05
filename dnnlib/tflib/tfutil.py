@@ -94,7 +94,7 @@ def _sanitize_tf_config(config_dict: dict = None) -> dict:
 def init_tf(config_dict: dict = None) -> None:
     """Initialize TensorFlow session using good default settings."""
     # Skip if already initialized.
-    if tf.get_default_session() is not None:
+    if tf.compat.v1.get_default_session() is not None:
         return
 
     # Setup config dict and random seeds.
@@ -106,7 +106,7 @@ def init_tf(config_dict: dict = None) -> None:
     if tf_random_seed == "auto":
         tf_random_seed = np.random.randint(1 << 31)
     if tf_random_seed is not None:
-        tf.set_random_seed(tf_random_seed)
+        tf.compat.v1.set_random_seed(tf_random_seed)
 
     # Setup environment variables.
     for key, value in list(cfg.items()):
@@ -129,7 +129,7 @@ def create_session(config_dict: dict = None, force_as_default: bool = False) -> 
     """Create tf.Session based on config dict."""
     # Setup TensorFlow config proto.
     cfg = _sanitize_tf_config(config_dict)
-    config_proto = tf.ConfigProto()
+    config_proto = tf.compat.v1.ConfigProto()
     for key, value in cfg.items():
         fields = key.split(".")
         if fields[0] not in ["rnd", "env"]:
@@ -139,7 +139,7 @@ def create_session(config_dict: dict = None, force_as_default: bool = False) -> 
             setattr(obj, fields[-1], value)
 
     # Create session.
-    session = tf.Session(config=config_proto)
+    session = tf.compat.v1.Session(config=config_proto)
     if force_as_default:
         # pylint: disable=protected-access
         session._default_session = session.as_default()
@@ -197,7 +197,7 @@ def set_vars(var_to_value_dict: dict) -> None:
         except KeyError:
             with absolute_name_scope(var.name.split(":")[0]):
                 with tf.control_dependencies(None):  # ignore surrounding control_dependencies
-                    setter = tf.assign(var, tf.placeholder(var.dtype, var.shape, "new_value"), name="setter")  # create new setter
+                    setter = tf.compat.v1.assign(var, tf.placeholder(var.dtype, var.shape, "new_value"), name="setter")  # create new setter
 
         ops.append(setter)
         feed_dict[setter.op.inputs[1]] = value
